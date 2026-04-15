@@ -1,0 +1,8 @@
+## Interface: 30300
+## Title: |cff00ff00Lizard|r|cffFFFFFFMMU|r |cffAAAAAA(Mount Me Up)|r
+## Notes: Random mount from custom list
+## Author: Lizard
+## Version: 0.3
+## SavedVariables: LizardMMU_Saved
+
+LizardMMU.lua
