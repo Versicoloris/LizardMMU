@@ -7,6 +7,7 @@ LizardMMU_Saved = LizardMMU_Saved or { favorites = {}, position = nil }
 LizardMMU.retrying = false
 LizardMMU.retryAttempts = 0
 LizardMMU.maxRetries = 5
+LizardMMU.lastTried = nil
 
 -- Find mount
 function LizardMMU:FindMountExact(name)
@@ -92,14 +93,41 @@ function LizardMMU:TryMount()
 
    self.retryAttempts = self.retryAttempts + 1
 
-   local name = LizardMMU_Saved.favorites[math.random(#LizardMMU_Saved.favorites)]
+-- Pick Mount
+   local name
+   repeat
+      name = LizardMMU_Saved.favorites[math.random(#LizardMMU_Saved.favorites)]
+   until name ~= self.lastTried or #LizardMMU_Saved.favorites == 1
+
+   self.lastTried = name
+   
    local id = self:FindMountExact(name)
 
-   if id then
-      CallCompanion("MOUNT", id)
-   else
+   if not id then
       self:TryMount()
+      return
    end
+
+   CallCompanion("MOUNT", id)
+
+   -- 🔥 HARD CHECK (instead of trusting UI_ERROR_MESSAGE)
+   local f = CreateFrame("Frame")
+   local elapsed = 0
+
+   f:SetScript("OnUpdate", function(selfFrame, delta)
+      elapsed = elapsed + delta
+
+      -- Wait ~0.3s (enough for mount attempt)
+      if elapsed > 0.3 then
+         selfFrame:SetScript("OnUpdate", nil)
+
+         if not IsMounted() then
+            LizardMMU:TryMount()
+         else
+            LizardMMU.retrying = false
+         end
+      end
+   end)
 end
 
 -- Summon
